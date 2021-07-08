@@ -195,4 +195,119 @@ booky.put("/book/update/author/:isbn/:authorId", (req, res) => {
   return res.json({ books: database.books, author: database.author });
 });
 
+
+/*
+Route           /publication/update/book
+Description     update/add new book to a publication
+Access          PUBLIC
+Parameter       isbn
+Methods         PUT
+*/
+
+booky.put("/publication/update/book/:isbn",(req,res) =>{
+  // update the publication database
+  database.publication.forEach((publication) =>{ 
+  if (publication.id === req.body.pubid){
+    return publication.books.push(req.params.isbn);
+  }
+  });
+  // update the book database
+  database.books.forEach((book) => {
+    if (book.ISBN === req.params.isbn){
+    book.publication = req.body.pubid;
+    return;
+    }
+  });
+  
+  return res.json
+  ({books: database.books , publications: database.publications ,message:"succesfully updated pulication",});
+});
+
+/*
+Route           /book/delete
+Description     delete a book
+Access          PUBLIC
+Parameter       isbn
+Methods         Delete
+*/
+booky.delete("/book/delete/:isbn", (req, res) => {
+  const updatedBookDatabase = database.books.filter(
+    (book) => book.ISBN !== req.params.isbn
+  );
+
+  database.books = updatedBookDatabase;
+  return res.json({books: database.books});
+
+});
+
+/*
+Route           /book/delete/author
+Description     delete a author from a book
+Access          PUBLIC
+Parameter       isbn, author id
+Methods         Delete
+*/
+booky.delete("/book/delete/author/:isbn/:authorId", (req, res) =>{
+  // update the book database 
+  database.books.forEach((book) => {
+    if (book.ISBN === req.params.isbn) {
+      const newAuthorList = book.authors.filter(
+      (author) => author !== parseInt(req.params.authorId)
+    );
+    book.authors = newAuthorList;
+    return;
+  }
+  });
+
+  // update the author database 
+  database.authors.forEach((author)  => {
+  if (author.id === parseInt(req.params.authorId)){
+    const newBookList = author.books.filter(
+      (book) => book !== req.params.isbn
+    );
+    author.books = newBookList;
+    return;
+  } 
+});
+ return res.json({
+   book: database.books,
+   author: database.authors,
+   message: "author was deleted",
+ });
+});
+
+
+/*
+Route           /publication/delete/book
+Description     delete  a book from publication
+Access          PUBLIC
+Parameter       isbn, pulication id
+Methods         Delete
+*/
+booky.delete("/publication/delete/book/:isbn/:pubid", (req,res) =>{
+  // update publication database 
+  database.publications.forEach((publication) =>  {
+    if (publication.id === parseInt(req.params.pubid)){
+      const newBookList = publication.books.filter(
+        (book) => book !== req.params.isbn
+      );
+
+      publication.books = newBookList;
+      return;
+    }
+});
+
+  //  update book database 
+  database.books.forEach((book) => {
+    if (book.ISBN === req.params.isbn){
+      book.publication = 0; //no publication availabe
+      return;
+    }
+  });
+  return res.json({
+    books: database.books,
+    publications: database.publications,
+  })
+});
+
 booky.listen(2000,() => console.log("Hey buddy your code is working"));
